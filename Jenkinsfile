@@ -1,20 +1,36 @@
 pipeline {
     agent any
+    
     stages {
-        stage('Build') {
+        stage('Setup Python Environment') {
             steps {
-                echo 'Building my first project on an M1 Mac!'
+                echo 'Creating a safe Python space and installing libraries...'
+                // We use a virtual environment (venv) to keep your Mac clean
+                sh '''
+                python3 -m venv myenv
+                source myenv/bin/activate
+                pip install -r requirements.txt
+                '''
             }
         }
-        stage('Test') {
+        
+        stage('Train Machine Learning Model') {
             steps {
-                echo 'Testing the code to make sure it works...'
+                echo 'Running the Python script...'
+                sh '''
+                source myenv/bin/activate
+                python3 train.py
+                '''
             }
         }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying the project to the world!'
-            }
+    }
+    
+    // This happens after the stages finish
+    post {
+        success {
+            echo 'Pipeline Succeeded! Saving the model artifact...'
+            // This tells Jenkins to keep the .pkl file so you can download it
+            archiveArtifacts artifacts: '*.pkl', allowEmptyArchive: false
         }
     }
 }
