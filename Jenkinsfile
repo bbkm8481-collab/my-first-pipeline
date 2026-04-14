@@ -1,6 +1,30 @@
 pipeline {
     agent any
+    pipeline {
+    agent any
     
+    // NEW: Ask the user for input before running!
+    parameters {
+        string(name: 'IMAGE_VERSION', defaultValue: 'v1', description: 'What version tag should we give this Docker image?')
+    }
+    
+    stages {
+        // ... (Keep your Python Setup and Train stages exactly the same) ...
+        
+        stage('Build Docker Container') {
+            steps {
+                echo "Packaging Docker image with tag: ${params.IMAGE_VERSION}"
+                sh """
+                export PATH=$PATH:/opt/homebrew/bin:/usr/local/bin
+                
+                # Notice we use double quotes (""") here so Jenkins can inject the variable!
+                docker build -t automated-house-predictor:${params.IMAGE_VERSION} .
+                """
+            }
+        }
+    }
+    // ... (Keep your post block the same) ...
+}
     stages {
         stage('Setup Python Environment') {
             steps {
