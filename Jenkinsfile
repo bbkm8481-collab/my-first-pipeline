@@ -4,8 +4,7 @@ pipeline {
     stages {
         stage('Setup Python Environment') {
             steps {
-                echo 'Creating a safe Python space and installing libraries...'
-                // We use a virtual environment (venv) to keep your Mac clean
+                echo 'Creating a safe Python space...'
                 sh '''
                 python3 -m venv myenv
                 source myenv/bin/activate
@@ -23,13 +22,22 @@ pipeline {
                 '''
             }
         }
+        
+        stage('Build Docker Container') {
+            steps {
+                echo 'Packaging the newly trained model into a Docker image...'
+                // We add the Mac Homebrew path just in case Jenkins can't find Docker
+                sh '''
+                export PATH=$PATH:/opt/homebrew/bin:/usr/local/bin
+                docker build -t automated-house-predictor .
+                '''
+            }
+        }
     }
     
-    // This happens after the stages finish
     post {
         success {
-            echo 'Pipeline Succeeded! Saving the model artifact...'
-            // This tells Jenkins to keep the .pkl file so you can download it
+            echo 'Pipeline Succeeded! The model is trained and containerized.'
             archiveArtifacts artifacts: '*.pkl', allowEmptyArchive: false
         }
     }
